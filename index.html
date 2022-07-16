@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+
+    <div style="display: flex;">
+        <div style="width:50%;padding:20px;text-align:center">
+            <img src="1654619192951.jpg" id="image" alt="" style="height: auto;width:20%;">
+            <div>
+                <textarea id="text_area" name="" id="" cols="30" rows="10">fuck you</textarea>
+            </div>
+            <div>
+                <input type="range" value="10" min="2" max="20" id="myRange">
+            </div>
+            <div>
+                <input type="range" value="22" min="2" max="30" id="myRange2">
+            </div>
+        </div>
+    
+        <div style="width:50%;">
+            <div id="disp" style="font-size:22px;line-height: 10px;width:auto;height:auto;border: 2px gray;" >
+                
+            </div>
+            <canvas  id="canvas" style="height:100%;width:100%;display: none;">
+            
+            </canvas>
+        </div>
+        
+    </div>
+    
+</body>
+
+<script>
+    // setting everthing up
+
+    // read the image 
+
+    // convert it to a matrix of RGB colors
+
+    // get the text 
+
+    // find how to give a litter a color;
+
+ 
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+
+            const image = new Image();
+
+            image.src = 'image.png';
+
+            image_height = 60
+            image_width = 60
+
+            console.log('image+height:'+image_height+'| '+image.height)
+            console.log('image+width:'+image_width+'| '+image.width)
+            image.addEventListener('load', () => {
+                ctx.drawImage(
+                    image, 0, 0,    
+                    image_width, 
+                    image_height
+                );
+
+
+                text = ''
+                var text_value = document.getElementById("text_area").value;
+
+                t=0
+               
+                for (let y = 0; y < image_height; y=y+1) {
+                        for (let x = 0; x < image_width; x=x+1) {
+                            t++
+                            var c = ctx.getImageData(x, y, 2, 3).data;
+                            if((text_value.length)>t){
+                                if(text_value[t]==' '){
+                                    letter = '-'
+                                }else{
+                                    var letter =  text_value[t]
+                                }
+                            }else{
+                                var letter = text_value[0]
+                                t=-1
+                            }
+
+
+                            letter = 'a'
+
+                            if(c[3]==0){
+                                letter
+                            }
+
+                            text = text+`<span style="color:rgb(${c[0]},${c[1]},${c[2]})">${letter}</span>`
+                            if(x==(image_width-1)){
+                                text = text+' '
+                            }
+                        }
+                }
+
+            });
+
+
+            window.onload = function(){
+                document.getElementById("disp").innerHTML=text;
+            }
+
+
+            text = ''
+
+            var slider = document.getElementById("myRange");
+            var slider2 = document.getElementById("myRange2");
+
+            // Update the current slider value (each time you drag the slider handle)
+            slider.oninput = function() {
+                this.value;
+                document.getElementById("disp").style.lineHeight = this.value+'px'
+            }
+
+            slider2.oninput = function() {
+                this.value;
+                document.getElementById("disp").style.fontSize = this.value+'px'
+            }
+
+
+</script>
+</html>

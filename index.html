@@ -11,6 +11,7 @@
     <div style="display: flex;">
         <div style="width:50%;padding:20px;text-align:center">
             <img src="1654619192951.jpg" id="image" alt="" style="height: auto;width:20%;">
+            <input type="file" id="image_input" onchange="putImage()">
             <div>
                 <textarea id="text_area" name="" id="" cols="30" rows="10">fuck you</textarea>
             </div>
@@ -22,11 +23,11 @@
             </div>
         </div>
     
-        <div style="width:50%;">
+        <div id="canvas_container" style="width:50%;">
             <div id="disp" style="font-size:22px;line-height: 10px;width:auto;height:auto;border: 2px gray;" >
                 
             </div>
-            <canvas  id="canvas" style="height:100%;width:100%;display: none;">
+            <canvas  id="canvas" style="height:100%;width:100%;display: block;display: none;">
             
             </canvas>
         </div>
@@ -46,84 +47,104 @@
 
     // find how to give a litter a color;
 
+    
  
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
+    
+    
 
-            const image = new Image();
+    image_height = 60
+    image_width = 60
 
-            image.src = 'image.png';
+    function showImage(src, target) {
+        var fr = new FileReader();
 
-            image_height = 60
-            image_width = 60
+        fr.onload = function (e) { target.src = this.result; draw() };
+        fr.readAsDataURL(src.files[0]);        
+    }
 
-            console.log('image+height:'+image_height+'| '+image.height)
-            console.log('image+width:'+image_width+'| '+image.width)
-            image.addEventListener('load', () => {
-                ctx.drawImage(
-                    image, 0, 0,    
-                    image_width, 
-                    image_height
-                );
+    function putImage() {
+        var src = document.getElementById("image_input");
+        var target = document.getElementById("image");
+        showImage(src, target);
+    }
 
+    function draw(){
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        var image = new Image();
 
-                text = ''
-                var text_value = document.getElementById("text_area").value;
-
-                t=0
-               
-                for (let y = 0; y < image_height; y=y+1) {
-                        for (let x = 0; x < image_width; x=x+1) {
-                            t++
-                            var c = ctx.getImageData(x, y, 2, 3).data;
-                            if((text_value.length)>t){
-                                if(text_value[t]==' '){
-                                    letter = '-'
-                                }else{
-                                    var letter =  text_value[t]
-                                }
-                            }else{
-                                var letter = text_value[0]
-                                t=-1
-                            }
-
-
-                            letter = 'a'
-
-                            if(c[3]==0){
-                                letter
-                            }
-
-                            text = text+`<span style="color:rgb(${c[0]},${c[1]},${c[2]})">${letter}</span>`
-                            if(x==(image_width-1)){
-                                text = text+' '
-                            }
-                        }
-                }
-
-            });
-
-
-            window.onload = function(){
-                document.getElementById("disp").innerHTML=text;
-            }
+        image.onload = function(){
+            console.log('image loaded')
+            ctx.drawImage(
+                image, 0, 0,    
+                image_width, 
+                image_height
+            );
 
 
             text = ''
+            var text_value = document.getElementById("text_area").value;
 
-            var slider = document.getElementById("myRange");
-            var slider2 = document.getElementById("myRange2");
+            t=0
+            
+            for (let y = 0; y < image_height; y=y+1) {
+                    for (let x = 0; x < image_width; x=x+1) {
+                        t++
+                        var c = ctx.getImageData(x, y, 2, 3).data;
+                        if((text_value.length)>t){
+                            if(text_value[t]==' '){
+                                letter = '-'
+                            }else{
+                                var letter =  text_value[t]
+                            }
+                        }else{
+                            var letter = text_value[0]
+                            t=-1
+                        }
 
-            // Update the current slider value (each time you drag the slider handle)
-            slider.oninput = function() {
-                this.value;
-                document.getElementById("disp").style.lineHeight = this.value+'px'
+
+                        // letter = 'a'
+
+                        
+
+                        text = text+`<a style="color:rgb(${c[0]},${c[1]},${c[2]},${c[3]})">${letter}</a>`
+                        if(x==(image_width-1)){
+                            text = text+' '
+                        }
+                    }
             }
+            document.getElementById("disp").innerHTML=text;
+        };
 
-            slider2.oninput = function() {
-                this.value;
-                document.getElementById("disp").style.fontSize = this.value+'px'
-            }
+
+        image.src = document.getElementById('image').getAttribute('src');
+        // image.src = 'image2.jpg';
+
+        
+           
+        
+    }
+    
+
+
+    text = ''
+
+
+    var slider = document.getElementById("myRange");
+    var slider2 = document.getElementById("myRange2");
+
+    // Update the current slider value (each time you drag the slider handle)
+    slider.oninput = function() {
+        this.value;
+        document.getElementById("disp").style.lineHeight = this.value+'px'
+    }
+
+    slider2.oninput = function() {
+        this.value;
+        document.getElementById("disp").style.fontSize = this.value+'px'
+    }
 
 
 </script>

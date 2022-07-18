@@ -9,36 +9,44 @@
 <body>
 
     <div style="display: flex;height:100vh">
-        <div style="width:50%;padding:20px;text-align:center;display:grid">
-            <img src="image.png" id="image" alt="" style="height: auto;width:20%;">
-            <input type="file" id="image_input" onchange="putImage()">
+        <div style="width:25%;padding:20px;text-align:center;display:grid">
+            <img src="image.png" id="image" alt="" style="height: auto;width:20%;margin-bottom:10px;margin:auto;">
+            <input type="file" id="image_input" onchange="putImage()" style="margin: auto;">
             <div>
                 <label for="text">Text</label>
-                <input name="text" id="text_area" name="" id="" cols="30" rows="10" value='i'>
+                <input name="text" id="text_area" name="" id="" cols="30" rows="10" value='&'>
             </div>
             <div>
-                <label for="letter_spacing">Letter spacing</label>
-                <input name="letter_spacing" type="range" value="10" min="2" max="20" id="letter_spacing_slider">
+                <label for="letter_spacing">Line height</label>
+                <input name="letter_spacing" type="range" value="0.4" min="0" max="15" step="0.1" id="letter_spacing_slider">
             </div>
             <div>
                 <label for="letter_size">Letter size</label>
                 <input name="letter_size" type="range" value="22" min="2" max="30" id="letter_size_slider">
             </div>
             <div>
-                <label  for="line_height">Line height</label>
+                <label  for="line_height">Letter spacing</label>
                 <input name="line_height" type="range" value="1" min="-10" max="10" id="line_height_slider">
             </div>
             <div>
                 <label  for="letter_weight">Letter Weight</label>
                 <input name="letter_weight" type="range" value="500" min="100" max="900" id="letter_weight_slider">
             </div>
+            <div id="smoothing_ratio_div" style="display: none;">
+                <label  for="smoothing_ratio">smoothing ratio</label>
+                <input name="smoothing_ratio" type="range" value="1" min="1" max="9" id="smoothing_ratio">
+            </div>
+            <div>
+                <label  for="ImageSmouthing">Image smouthing</label>
+                <input  type="checkbox" name="ImageSmouthing" id="ImageSmouthing">
+            </div>
         </div>
     
-        <div id="canvas_container" style="width:50%;display: flex;">
-            <div id="disp" style="margin:auto;font-weight: 500;letter-spacing:2px; font-size:20px;line-height: 8px;width:min-content;height:auto;border: 2px gray;" >
+        <div id="canvas_container" style="width:75%;display: flex;">
+            <div id="disp" style="margin:auto;font-weight: 900;letter-spacing:-10px; font-size:20px;line-height: 7px;width:min-content;height:auto;border: 2px gray;" >
                 
             </div>
-            <canvas  id="canvas" style="height:100%;width:100%;display: block;display: none;">
+            <canvas  id="canvas" style="height:100%;width:100%;display: none;">
             
             </canvas>
         </div>
@@ -63,9 +71,10 @@
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
 
-    sizing_ratio = 2;
+    sizing_ratio = 1;
     image_height = 60
     image_width = 60
+    image_smoothing = false
 
     function showImage(src, target) {
         var fr = new FileReader();
@@ -83,23 +92,40 @@
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         
         var image = new Image();
-        
+
         image.onload = function(){
             console.log('image loaded')
+
+            number_length = String(image.width).length
+            ratio = '0.';
+            for (let r = 0; r < number_length.length; r++) {
+                ratio = ratio+'0'
+            }
+            ratio = Number(ratio+sizing_ratio)
+            console.log(image.width*ratio)
+            document.getElementById("canvas").setAttribute('height',image.height+'px')
+            document.getElementById("canvas").setAttribute('width',image.width+'px')
+
+            if(!image_smoothing){
+                ctx.msImageSmoothingEnabled = false;
+                ctx.mozImageSmoothingEnabled = false;
+                ctx.webkitImageSmoothingEnabled = false;
+                ctx.imageSmoothingEnabled = false;
+            }
+            
             ctx.drawImage(
                 image, 0, 0,    
-                image_width, 
-                image_height
+                Math.floor(image.width*ratio), 
+                Math.floor(image.height*ratio)
             );
-
 
             text = ''
             var text_value = document.getElementById("text_area").value;
 
             t=0
             
-            for (let y = 0; y < image_height; y=y+1) {
-                    for (let x = 0; x < image_width; x=x+1) {
+            for (let y = 0; y < Math.floor(image.height*ratio); y=y+1) {
+                    for (let x = 0; x < Math.floor(image.width*ratio); x=x+1) {
                         t++
                         var c = ctx.getImageData(x, y, 2, 3).data;
                         if((text_value.length)>t){
@@ -114,10 +140,9 @@
                         }
 
                         text = text+`<a style="color:rgb(${c[0]},${c[1]},${c[2]},${c[3]})">${letter}</a>`
-                        if(x==(image_width-1)){
-                            text = text+' '
-                        }
                     }
+
+                    text = text+' '
             }
             document.getElementById("disp").innerHTML=text;
         };
@@ -143,6 +168,8 @@
     var letter_size_value = document.getElementById("letter_size_slider");
     var line_height_value = document.getElementById("line_height_slider");
     var letter_weight_value = document.getElementById("letter_weight_slider");
+    var image_smouting = document.getElementById("ImageSmouthing");
+    var smoothing_ratio = document.getElementById("smoothing_ratio");
 
     // Update the current slider value (each time you drag the slider handle)
     letter_spacing_value.oninput = function() {
@@ -162,7 +189,22 @@
 
     letter_weight_value.oninput = function() {
         this.value;
-        document.getElementById("disp").style.fontWeight = this.value+'px'
+        document.getElementById("disp").style.fontWeight = this.value
+    }
+
+    smoothing_ratio.oninput = function() {
+        sizing_ratio = this.value;
+        draw()
+    }
+    
+    image_smouting.onchange = function() {
+        image_smoothing = image_smouting.checked
+        if(image_smoothing){
+            document.getElementById("smoothing_ratio_div").style.display = 'block'
+        }else{
+            document.getElementById("smoothing_ratio_div").style.display = 'none'
+        }
+        draw()
     }
 
 </script>

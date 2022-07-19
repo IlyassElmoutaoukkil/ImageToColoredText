@@ -4,9 +4,18 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="html2canvas.min.js"></script>
     <title>Document</title>
 </head>
 <body>
+    <div id="img_show_div" style="z-index: 5;;position:absolute;display:none; width:100%;height:100%;top:0px;right:0px;background-color:white;opacity: 0.95;text-align:center;" >
+        <a style="position: absolute;top:20px;right:20px;" onclick="CloseExportDiv()" >X</a>
+        <div style="margin:auto">
+            <img id="img_show" src="" alt="" style="width:80%">
+            <div><a id="img_link" href=""> download </a></div>    
+        </div>
+        
+    </div>
 
     <div style="display: flex;height:100vh">
         <div style="width:25%;padding:20px;display:grid">
@@ -41,8 +50,13 @@
                 <input  type="checkbox" name="ImageSmouthing" id="ImageSmouthing">
             </div>
             <div id="color_selection_container" style="display: block;">
-                <label  for="backgroud_color">background color</label>
+                <label  for="backgroud_color">png background color</label>
                 <input  type="color" name="backgroud_color" id="backgroud_color">
+            </div>
+
+            <div id="general_color_selection_container" style="display: block;">
+                <label  for="general_backgroud_color">background color</label>
+                <input  type="color" name="general_backgroud_color" id="general_backgroud_color">
             </div>
         </div>
 
@@ -52,9 +66,19 @@
             <div id="disp" style="margin:auto;font-weight: 900;letter-spacing:-10px; font-size:20px;line-height: 7px;width:min-content;height:auto;border: 2px gray;" >
                 
             </div>
+            
             <canvas  id="canvas" style="height:100%;width:100%;display: none;">
             
             </canvas>
+
+            <button onclick="DownloadAsImage()" style="border-radius: 3px;box-shadow: 0px 0px 10px blueviolet;border:none;position: absolute;right:20px;top:20px;padding:10px;background-color:blueviolet;color:white" >
+                export
+            </button>
+
+            <div id="previewImage" style="display:none">
+
+            </div>
+
         </div>
         
     </div>
@@ -83,8 +107,37 @@
     var image_smoothing = false
     var background_color = '#ffffff'
     var extention = 'png'
-
     
+    function CloseExportDiv(){
+        document.getElementById('img_show_div').style.display='none'
+    }
+
+    function DownloadAsImage(){
+
+        // img_show_div
+        // img_show
+        // img_link
+
+        var getCanvas = null
+        html2canvas(document.getElementById('disp')).then((canvas2)=>{
+                document.getElementById("previewImage").append(canvas2);
+                getCanvas = canvas2;
+                console.log(canvas2)
+        }).then(()=>{
+            var imageData = getCanvas.toDataURL("image/png");
+            // Now browser starts downloading it instead of just showing it
+            var newData = imageData.replace("image/png", "image/octet-stream");
+            
+            document.getElementById('img_show_div').style.display='flex'
+            document.getElementById('img_show').setAttribute("src", imageData)
+            document.getElementById('img_link').setAttribute('download',`export${String((Math.random(10)*5000)).split('.')[0]}.png`)
+            document.getElementById('img_link').setAttribute('href',newData)
+            
+        })
+
+
+        
+    }
 
     function showImage(src, target) {
         var fr = new FileReader();
@@ -102,12 +155,10 @@
 
         // enable background color selection 
         if(extention == 'png'){
-            document.getElementById('color_selection_container').style = 'block'
+            document.getElementById('color_selection_container').style.display = 'block'
         }else{
-            document.getElementById('color_selection_container').style = 'none'
+            document.getElementById('color_selection_container').style.display = 'none'
         }
-
-        console.log(extention)
         
         showImage(src, target);
     }
@@ -200,6 +251,7 @@
     var letter_weight_value = document.getElementById("letter_weight_slider");
     var image_smouting = document.getElementById("ImageSmouthing");
     var smoothing_ratio = document.getElementById("smoothing_ratio");
+    var general_color_selection = document.getElementById("general_color_selection");
 
     // Update the current slider value (each time you drag the slider handle)
     letter_spacing_value.oninput = function() {
@@ -226,11 +278,16 @@
         sizing_ratio = this.value;
         draw()
     }
+
+    general_backgroud_color.onchange = function() {
+        document.getElementById('disp').style.backgroundColor=this.value
+    }
     
     image_smouting.onchange = function() {
         image_smoothing = image_smouting.checked
         if(image_smoothing){
             document.getElementById("smoothing_ratio_div").style.display = 'block'
+            alert('smoothing the image may cause some freezing...')
         }else{
             document.getElementById("smoothing_ratio_div").style.display = 'none'
             sizing_ratio = 1

@@ -11,13 +11,13 @@
     <div id="img_show_div" style="z-index: 5;;position:absolute;display:none; width:100%;height:100%;top:0px;right:0px;background-color:white;opacity: 0.95;text-align:center;" >
         <a style="position: absolute;top:20px;right:20px;" onclick="CloseExportDiv()" >X</a>
         <div style="margin:auto">
-            <img id="img_show" src="" alt="" style="width:80%">
+            <img id="img_show" src="" alt="" style="height:80%">
             <div><a id="img_link" href=""> download </a></div>    
         </div>
         
     </div>
 
-    <div style="display: flex;height:100vh">
+    <div id="main_page" style="display: flex;height:100vh">
         <div style="width:25%;padding:20px;display:grid">
             <img src="image.png" id="image" alt="" style="height: auto;width:20%;margin-bottom:10px;margin:auto;">
             <input type="file" id="image_input" onchange="putImage()" style="margin: auto;">
@@ -107,9 +107,11 @@
     var image_smoothing = false
     var background_color = '#ffffff'
     var extention = 'png'
+    var letter_spacing = 10
     
     function CloseExportDiv(){
-        document.getElementById('img_show_div').style.display='none'
+        document.getElementById('img_show_div').style.display='none';
+        document.getElementById('main_page').style.display='flex';
     }
 
     function DownloadAsImage(){
@@ -129,6 +131,7 @@
             var newData = imageData.replace("image/png", "image/octet-stream");
             
             document.getElementById('img_show_div').style.display='flex'
+            document.getElementById('main_page').style.display='none';
             document.getElementById('img_show').setAttribute("src", imageData)
             document.getElementById('img_link').setAttribute('download',`export${String((Math.random(10)*5000)).split('.')[0]}.png`)
             document.getElementById('img_link').setAttribute('href',newData)
@@ -164,6 +167,8 @@
     }
 
 
+    object_margin_right = []
+    object_margin_left = []
 
     function draw(){
         ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -179,7 +184,6 @@
                 ratio = ratio+'0'
             }
             ratio = Number(ratio+sizing_ratio)
-            console.log(image.width*ratio)
             document.getElementById("canvas").setAttribute('height',image.height+'px')
             document.getElementById("canvas").setAttribute('width',image.width+'px')
 
@@ -198,34 +202,77 @@
 
             text = ''
             var text_value = document.getElementById("text_area").value;
+            text_value = text_value.replaceAll(' ','_')
 
             t=0
+
+            // TODO make this work even whene we change the letter or text
+            // TODO make empty space using margin
+            // TODO make this shows a html code inside a textarea,
+            pexil = 0
+            margin = 0
+            last_visible_element = null
+            EmptyRightSpace = 0
+            VisibleCaracter = false
             
-            for (let y = 0; y < Math.floor(image.height*ratio); y=y+2) {
-                    for (let x = 0; x < Math.floor(image.width*ratio); x=x+2) {
+            for (let y = 0; y < Math.floor(image.height*ratio); y=y+3) {
+                
+                    for (let x = 0; x < Math.floor(image.width*ratio); x=x+3) {
                         t++
+                        pexil++
                         var c = ctx.getImageData(x, y, 2, 3).data;
-                        if((text_value.length)>t){
-                            if(text_value[t]==' '){
-                                letter = '-'
-                            }else{
-                                var letter =  text_value[t]
-                            }
+                        if((text_value.length-1)>t){
+                            var letter =  text_value[t]
                         }else{
                             var letter = text_value[0]
                             t=-1
                         }
 
                         if(extention=='png' && (c[0]=='0' && c[1]=='0' && c[2]=='0' && c[3]=='0')){
-                            text = text+`<a style="color:${background_color}">${letter}</a>`
-                        }else{
-                            text = text+`<a style="color:rgb(${c[0]},${c[1]},${c[2]},${c[3]})">${letter}</a>`
-                        }
-                    }
+                            // text = text+`<a style="color:${background_color}">${letter}</a>`
+                            if(last_visible_element!=null){
+                                margin = margin+letter_spacing
+                                margin_id = {}
+                                margin_id.pexil = last_visible_element
+                                margin_id.margin = margin    
+                                object_margin_right.push(margin_id)
+                            }
 
+                            if (!VisibleCaracter){
+                                EmptyRightSpace = EmptyRightSpace+letter_spacing
+                                margin_id_left = {}
+                                margin_id_left.margin = margin
+                            }
+
+                        }else{
+                            text = text+`<a id="${pexil}" style="color:rgb(${c[0]},${c[1]},${c[2]},${c[3]})">${letter}</a>`
+                            last_visible_element = pexil
+                            object_margin_left.push({pexil:pexil,margin:EmptyRightSpace})
+                            VisibleCaracter = true
+                        }
+
+                    }
+                    VisibleCaracter = false
+                    margin = 0
+                    EmptyRightSpace = 0
                     text = text+' '
             }
             document.getElementById("disp").innerHTML=text;
+
+            setTimeout(function(){
+                for (let p = 0; p < object_margin_right.length; p++) {
+                const element = object_margin_right[p];
+                document.getElementById(String(element.pexil)).style.marginRight = element.margin+'px'
+            }
+            console.log(object_margin_left)
+
+            for (let ml= 0; ml< object_margin_left.length; ml++) {
+                const elm = object_margin_left[ml];
+                document.getElementById(String(elm.pexil)).style.marginLeft = elm.margin+'px'
+            }
+            },2000)
+            
+            
         };
 
 
@@ -257,6 +304,7 @@
     letter_spacing_value.oninput = function() {
         this.value;
         document.getElementById("disp").style.lineHeight = this.value+'px'
+        letter_spacing= this.value
     }
 
     letter_size_value.oninput = function() {
